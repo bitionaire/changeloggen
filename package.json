@@ -1,8 +1,8 @@
 {
   "name": "changeloggen",
   "version": "0.1.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Changelog generator for Git projects",
+  "bin": "./bin/changeloggen",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

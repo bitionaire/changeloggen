@@ -4,14 +4,22 @@
   </p>
 </div>
 
-_Currently under construction_
+Changelog generator for Git projects. **The development is in alpha
+state and it is not yet clear if further features will be added**.
 
-Changelog generator for Git projects.
 
-This generator will analyze all releases based on the repository tags
-and associate Markdown `.md` files with each release. Based on some
-meta information specified in the change files, a changelog will be
-generated.
+This generator will find all releases based on
+[semantic version](https://semver.org/) repository tags. It will then
+start to associate Markdown `.md` files with each release. Based on some
+additional meta information specified in the change files, a complete
+changelog will be generated.
+
+### Is this the right thing for me?
+
+If you don't want manually write all changes in a single file and
+mess around with annoying merge conflicts or you also don't like
+to put your changes in commit messages, then this might be the tool
+for you.
 
 ## Change descriptions
 
@@ -52,6 +60,56 @@ precendence: 10
 ---
 
 Description of the enhancement
+```
+
+## Output format
+
+The output format is fixed for now, and cannot be changed. Maybe a
+templating engine will be added in a later version.
+
+```markdown
+# x.y.z
+
+All concatenated 'text' changes
+
+## Features
+
+* All 'feature' changes
+* ...
+
+## Changes
+
+* All 'change' changes
+* ...
+
+
+## Deprecated
+
+* All 'deprecation' changes
+* ...
+
+
+## Removed
+
+* All 'deactivation' changes
+* ...
+
+
+## Patches
+
+* All 'patch' or 'bugfix' changes
+* ...
+
+
+## Security
+
+* All 'security' changes
+* ...
+
+
+# Predecessor of x.y.z
+
+...
 ```
 
 ## Prerequisites
