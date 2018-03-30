@@ -170,11 +170,11 @@ const compareChangePrecedence = (a, b) => {
   }
 
   if (!!aPrecendence && !!bPrecendence) {
-    return aPrecendence > bPrecendence ? 1 : -1;
+    return aPrecendence > bPrecendence ? -1 : 1;
   } else if (!!aPrecendence && !bPrecendence) {
-    return 1;
-  } else {
     return -1;
+  } else {
+    return 1;
   }
 };
 
@@ -191,9 +191,9 @@ const renderTextChanges = (changes = []) => {
 
 const renderChanges = (categoryName, changes = []) => {
   if (changes.length > 0) {
-    let changelog = `## ${categoryName}\n\n`;
+    let changelog = `## ${categoryName}\n`;
     changes.sort(compareChangePrecedence).forEach(change => {
-      changelog += `* ${change.body.replace(/(?:\r\n|\r|\n)/g, '\n  ')}`;
+      changelog += `\n* ${change.body.replace(/(?:\r\n|\r|\n)/g, '\n  ')}`;
     });
     changelog += '\n\n';
     return changelog;
