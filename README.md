@@ -68,7 +68,7 @@ The output format is fixed for now, and cannot be changed. Maybe a
 templating engine will be added in a later version.
 
 ```markdown
-# x.y.z
+# X.Y.Z
 
 All concatenated 'text' changes
 
@@ -107,7 +107,7 @@ All concatenated 'text' changes
 * ...
 
 
-# Predecessor of x.y.z
+# Predecessor of X.Y.Z
 
 ...
 ```
