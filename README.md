@@ -9,7 +9,9 @@ _Currently under construction_
 Changelog generator for Git projects.
 
 This generator will analyze all releases based on the repository tags
-and associate Markdown `.md` files with each release.
+and associate Markdown `.md` files with each release. Based on some
+meta information specified in the change files, a changelog will be
+generated.
 
 ## Change descriptions
 
@@ -35,13 +37,16 @@ file header.
   * `text` - An introductory text or a complete description of all
     changes
 * `pin`: Pins this change to the specified version tag
+* `precedence`: The change with the highest precendence number will be
+  shown first in its type category
 
-### Example
+### Example file
 
 ```markdown
 ---
 type: enhancement
 pin: v4.3.7
+precendence: 10
 ---
 
 Description of the enhancement
