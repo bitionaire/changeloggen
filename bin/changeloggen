@@ -1,0 +1,196 @@
+#!/usr/bin/env node
+
+const program = require('commander');
+const log = require('console-emoji');
+const semver = require('semver');
+const fm = require('front-matter');
+
+const fs = require('fs');
+const path = require('path');
+const { spawnSync } = require( 'child_process' );
+
+program
+  .option('-d, --include-drafts', 'Include draft changes')
+  .option('-u, --include-unreleased', 'Include yet unreleased changes')
+  .parse(process.argv);
+
+// check repo directory: pwd or specified dir
+const srcDir = program.args[0];
+
+let repoDir = process.cwd();
+if (srcDir) {
+  try {
+    if (srcDir && fs.lstatSync(srcDir).isDirectory()) {
+      process.chdir(srcDir);
+      repoDir = process.cwd();
+    } else {
+      log('specified path is not a directory', 'err');
+      process.exitCode = 1;
+      return;
+    }
+  } catch (err) {
+    log('specified directory does not exist', 'err');
+    process.exitCode = 1;
+    return;
+  }
+}
+
+// check if dir is a git repo
+const isGitRepo = spawnSync( 'git', [ 'rev-parse', '--is-inside-work-tree' ] ).stdout.toString().trim() === 'true';
+
+if (!isGitRepo) {
+  log('command will only work for git repos', 'err');
+  process.exitCode = 1;
+  return;
+}
+
+// check if changelog dir does exist
+const changelogDir = path.resolve(process.cwd(), 'changelog');
+try {
+  if ( !fs.lstatSync(changelogDir).isDirectory() ) {
+    log(changelogDir + ' is not a directory', 'err');
+    process.exitCode = 2;
+    return;
+  }
+} catch (err) {
+  log(changelogDir + ' does not exist', 'err');
+  process.exitCode = 3;
+  return;
+}
+
+// get array of all commit hashes
+const hashes = spawnSync( 'git', [ '--no-pager', 'log', '--reverse', '--pretty=format:%H' ] ).stdout.toString().trim().split('\n');
+
+// get map of all versions to commit hashes
+const tags = {};
+spawnSync( 'git', [ 'show-ref', '--tags', '--head' ] ).stdout.toString().trim().split('\n').forEach(tag => {
+  const splitted = tag.split(' ');
+  const hash = splitted[0];
+
+  if (splitted[1].startsWith('refs/tags/')) {
+    const tag = splitted[1].substr('refs/tags/'.length);
+
+    if (semver.valid(tag)) {
+      tags[ tag ] = hash;
+    }
+  }
+});
+
+// create a map of commit hashes to versions
+const versionsForCommits = {};
+
+const sortedVersions = Object.keys(tags).sort(semver.compare);
+let currentHashIndex = 0;
+sortedVersions.forEach(version => {
+  let getAllVersions = true;
+  while (getAllVersions && currentHashIndex < hashes.length) {
+
+    if (tags[version] === hashes[currentHashIndex]) {
+      getAllVersions = false;
+    }
+
+    versionsForCommits[hashes[currentHashIndex]] = version;
+    currentHashIndex++;
+  }
+});
+
+
+// map all changelog files to versions
+const fileToVersion = {};
+
+const allChangelogModifications = spawnSync( 'git', [ '--no-pager', 'log', '--name-status', '--reverse', '--diff-filter=ARD', '--format=%n%H', '--', changelogDir ] ).stdout.toString().trim().split('\n');
+
+let currentHash = undefined;
+for (let i = 0; i < allChangelogModifications.length; i++) {
+  if (!currentHash) {
+    currentHash = allChangelogModifications[i];
+    i++;
+  } else {
+    if (allChangelogModifications[i].length > 0) {
+      const splitted = allChangelogModifications[i].split('\t');
+
+      // handle addition
+      if (splitted[0] === 'A') {
+        fileToVersion[splitted[1]] = versionsForCommits[currentHash];
+      }
+
+      // handle deletion
+      if (splitted[0] === 'D') {
+        delete fileToVersion[splitted[1]];
+      }
+
+      // handle rename (reset if draft was renamed)
+      if (splitted[0].startsWith('R')) {
+        if (splitted[1].endsWith('.draft.md') && !splitted[2].endsWith('draft.md')) {
+          delete fileToVersion[splitted[1]];
+          fileToVersion[splitted[2]] = versionsForCommits[currentHash]
+        } else {
+          fileToVersion[ splitted[ 2 ] ] = fileToVersion[ splitted[ 1 ] ];
+          delete fileToVersion[ splitted[ 1 ] ];
+        }
+      }
+    } else {
+      currentHash = undefined;
+    }
+  }
+}
+
+// create a map of version to array of files
+let versionToFiles = {};
+Object.keys(fileToVersion).forEach(file => {
+  const version = fileToVersion[file];
+
+  // check if changelog is already released
+  if (version) {
+    if ( !versionToFiles[ version ] ) {
+      versionToFiles[ version ] = [];
+    }
+    versionToFiles[ version ].push(file);
+  }
+});
+
+// create changelog data: map of version to map of change type to change text
+const changelogData = {};
+Object.keys(versionToFiles).sort(semver.compare).forEach(version => {
+
+  changelogData[version] = {};
+
+  versionToFiles[version].forEach(file => {
+
+    const data = fs.readFileSync(file).toString();
+    const parsedData = fm(data);
+    const changeType = parsedData.attributes.type;
+
+    if (!changelogData[version][changeType]) {
+      changelogData[version][changeType] = [];
+    }
+
+    changelogData[version][changeType].push(parsedData.body.trim());
+  });
+});
+
+// create changelog output
+let changelog = '';
+Object.keys(changelogData).sort(semver.rcompare).forEach(version => {
+
+  changelog += `# ${semver.clean(version)}\n\n`;
+
+  if (changelogData[version].feature) {
+    changelog += `## Features\n\n`;
+    changelogData[version].feature.forEach(feature => {
+      changelog += `* ${feature.replace(/(?:\r\n|\r|\n)/g, '\n  ')}`;
+    });
+    changelog += '\n\n';
+  }
+
+  if (changelogData[version].bug) {
+    changelog += `## Bugfixes\n\n`;
+    changelogData[version].bug.forEach(bug => {
+      changelog += `* ${bug.replace(/(?:\r\n|\r|\n)/g, '\n  ')}`;
+    });
+    changelog += '\n\n';
+  }
+});
+
+// echo changelog
+console.log(changelog.trim());
