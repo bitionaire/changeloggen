@@ -16,7 +16,9 @@ generated.
 ## Change descriptions
 
 A change file is a Markdown `.md` document. All change files should
-be placed in the `changelog` directory of the repository root.
+be placed somewhere inside of the `changelog` directory of the
+repository root. All subdirectories will be scanned, so changes can
+be organized e.g. by date directories.
 
 Changes that are not ready for release should have the file suffix
 `.draft.md` and will be skipped in the changelog generation process,
@@ -51,3 +53,18 @@ precendence: 10
 
 Description of the enhancement
 ```
+
+## Prerequisites
+
+[Node.js](https://nodejs.org/en/) must be installed.
+
+## Getting started
+
+Go to a repository that does contain change files or execute the CLI
+tool with the path to the repository
+
+```
+node bin/changeloggen <repository_dir>
+```
+
+A changelog will be printed on the console.
