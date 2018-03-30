@@ -1,6 +1,6 @@
 <div align="center" markdown="1" style="margin-bottom: 2.5em">
   <p>
-    <img src="https://raw.githubusercontent.com/masinio/changeloggen/master/changeloggen.svg" alt="changeloggen" style="width: 300px; max-width: 70%; height: auto;" />
+    <img src="https://raw.githubusercontent.com/masinio/changeloggen/master/changeloggen.png" alt="changeloggen" style="width: 300px; max-width: 70%; height: auto;" />
   </p>
 </div>
 
