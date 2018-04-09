@@ -135,7 +135,7 @@ const getNormalizedType = (changeType) => {
   }
 };
 
-const getChangelogData = (filesToVersionTags) => {
+const getChangelogData = (filesToVersionTags, includeDrafts, includeUpcoming) => {
   const changelogData = {};
   Object.keys(filesToVersionTags).forEach(file => {
     const parsedData = fm(fs.readFileSync(file).toString());
@@ -143,7 +143,13 @@ const getChangelogData = (filesToVersionTags) => {
     const type = getNormalizedType(parsedData.attributes.type);
     let version = parsedData.attributes.pin || filesToVersionTags[file];
     if (file.endsWith('.draft.md')) {
-      version = undefined;
+      if (includeDrafts) {
+        version = 'Work in progress';
+      } else {
+        version = undefined;
+      }
+    } else if (!version && includeUpcoming) {
+      version = 'Upcoming';
     }
     const precedence = parsedData.attributes.precedence;
     const body = parsedData.body.trim();
@@ -226,11 +232,26 @@ const run = () => {
     const versionTagsToCommitHashes = getVersionTagsToCommitHashes();
     const commitHashesToVersionTags =  getCommitHashesToVersionTags(versionTagsToCommitHashes);
     const filesToVersionTags = getFilesToVersionTags(changelogDir, commitHashesToVersionTags);
-    const changelogData = getChangelogData(filesToVersionTags);
+    const changelogData = getChangelogData(filesToVersionTags, program.includeDrafts, program.includeUpcoming);
 
     let changelog = '';
-    Object.keys(changelogData).filter(version => version !== 'undefined').sort(semver.rcompare).forEach(version => {
-      changelog += `# ${semver.clean(version)}\n\n`;
+    Object.keys(changelogData).filter(version => version !== 'undefined').sort((a, b) => {
+      if (semver.valid(a) && semver.valid(b)) {
+        return semver.rcompare(a,b);
+      }
+      if (a === 'Work in progress' || b === 'Upcoming') {
+        return 1;
+      }
+      if (a === 'Upcoming' || b === 'Work in progress') {
+        return -1;
+      }
+      return a.localeCompare(b);
+    }).forEach(version => {
+      if (semver.valid(version)) {
+        changelog += `# ${semver.clean(version)}\n\n`;
+      } else {
+        changelog += `# ${version}\n\n`;
+      }
       changelog += renderTextChanges(changelogData[version]['text']);
       changelog += renderChanges('Features', changelogData[version]['feature']);
       changelog += renderChanges('Changes', changelogData[version]['change']);
