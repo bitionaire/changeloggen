@@ -1,5 +1,5 @@
 {
-  "name": "changeloggen",
+  "name": "@masinio/changeloggen",
   "version": "0.1.0",
   "description": "Changelog generator for Git projects",
   "bin": "./bin/changeloggen",

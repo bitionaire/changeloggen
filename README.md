@@ -125,4 +125,11 @@ tool with the path to the repository
 node bin/changeloggen <repository_dir>
 ```
 
+or install it
+
+```
+npm install -g @masinio/changeloggen
+changeloggen <repository_dir>
+```
+
 A changelog will be printed on the console.
