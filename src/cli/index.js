@@ -135,12 +135,23 @@ const getNormalizedType = (changeType) => {
   }
 };
 
-const getChangelogData = (filesToVersionTags, includeDrafts, includeUpcoming) => {
+const getChangelogData = (filesToVersionTags, includeDrafts, includeUpcoming, dir) => {
   const changelogData = {};
   Object.keys(filesToVersionTags).forEach(file => {
-    const parsedData = fm(fs.readFileSync(file).toString());
+
+    file = dir + '/' + file;
+
+    let parsedData = undefined;
+    try {
+      parsedData = fm(fs.readFileSync(file).toString());
+    } catch (e) {
+      // failed reading file
+      return;
+    }
 
     const type = getNormalizedType(parsedData.attributes.type);
+    if(!type) return;
+
     let version = parsedData.attributes.pin || filesToVersionTags[file];
     if (file.endsWith('.draft.md')) {
       if (includeDrafts) {
@@ -168,16 +179,16 @@ const getChangelogData = (filesToVersionTags, includeDrafts, includeUpcoming) =>
 };
 
 const compareChangePrecedence = (a, b) => {
-  const aPrecendence = a.precedence;
-  const bPrecendence = b.precedence;
+  const aPrecedence = a.precedence;
+  const bPrecedence = b.precedence;
 
-  if (aPrecendence === bPrecendence) {
+  if (aPrecedence === bPrecedence) {
     return 0;
   }
 
-  if (!!aPrecendence && !!bPrecendence) {
-    return aPrecendence > bPrecendence ? -1 : 1;
-  } else if (!!aPrecendence && !bPrecendence) {
+  if (!!aPrecedence && !!bPrecedence) {
+    return aPrecedence > bPrecedence ? -1 : 1;
+  } else if (!!aPrecedence && !bPrecedence) {
     return -1;
   } else {
     return 1;
@@ -231,8 +242,8 @@ const run = () => {
     // create changelog
     const versionTagsToCommitHashes = getVersionTagsToCommitHashes();
     const commitHashesToVersionTags =  getCommitHashesToVersionTags(versionTagsToCommitHashes);
-    const filesToVersionTags = getFilesToVersionTags(changelogDir, commitHashesToVersionTags);
-    const changelogData = getChangelogData(filesToVersionTags, program.includeDrafts, program.includeUpcoming);
+    const filesToVersionTags = getFilesToVersionTags(process.cwd(), commitHashesToVersionTags);
+    const changelogData = getChangelogData(filesToVersionTags, program.includeDrafts, program.includeUpcoming, process.cwd());
 
     let changelog = '';
     Object.keys(changelogData).filter(version => version !== 'undefined').sort((a, b) => {
@@ -263,6 +274,13 @@ const run = () => {
 
     // echo changelog
     console.log(changelog.trim());
+    
+    const filePath = path.resolve(changelogDir, 'changelog.md')
+    fs.writeFile(filePath, changelog.trim(), (err) => {
+      if (err) throw err
+
+      console.log('\n\nsuccessfully written to', filePath)
+    })
   } catch (err) {
     log(err.message, 'err');
     process.exitCode = 1;
