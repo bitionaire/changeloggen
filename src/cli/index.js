@@ -179,16 +179,16 @@ const getChangelogData = (filesToVersionTags, includeDrafts, includeUpcoming, di
 };
 
 const compareChangePrecedence = (a, b) => {
-  const aPrecendence = a.precedence;
-  const bPrecendence = b.precedence;
+  const aPrecedence = a.precedence;
+  const bPrecedence = b.precedence;
 
-  if (aPrecendence === bPrecendence) {
+  if (aPrecedence === bPrecedence) {
     return 0;
   }
 
-  if (!!aPrecendence && !!bPrecendence) {
-    return aPrecendence > bPrecendence ? -1 : 1;
-  } else if (!!aPrecendence && !bPrecendence) {
+  if (!!aPrecedence && !!bPrecedence) {
+    return aPrecedence > bPrecedence ? -1 : 1;
+  } else if (!!aPrecedence && !bPrecedence) {
     return -1;
   } else {
     return 1;

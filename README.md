@@ -47,7 +47,7 @@ file header.
   * `text` - An introductory text or a complete description of all
     changes
 * `pin`: Pins this change to the specified version tag
-* `precedence`: The change with the highest precendence number will be
+* `precedence`: The change with the highest precedence number will be
   shown first in its type category
 
 ### Example file
@@ -56,7 +56,7 @@ file header.
 ---
 type: enhancement
 pin: v4.3.7
-precendence: 10
+precedence: 10
 ---
 
 Description of the enhancement
