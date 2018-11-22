@@ -274,6 +274,13 @@ const run = () => {
 
     // echo changelog
     console.log(changelog.trim());
+    
+    const filePath = path.resolve(changelogDir, 'changelog.md')
+    fs.writeFile(filePath, changelog.trim(), (err) => {
+      if (err) throw err
+
+      console.log('\n\nsuccessfully written to', filePath)
+    })
   } catch (err) {
     log(err.message, 'err');
     process.exitCode = 1;
