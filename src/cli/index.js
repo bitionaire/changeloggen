@@ -135,12 +135,23 @@ const getNormalizedType = (changeType) => {
   }
 };
 
-const getChangelogData = (filesToVersionTags, includeDrafts, includeUpcoming) => {
+const getChangelogData = (filesToVersionTags, includeDrafts, includeUpcoming, dir) => {
   const changelogData = {};
   Object.keys(filesToVersionTags).forEach(file => {
-    const parsedData = fm(fs.readFileSync(file).toString());
+
+    file = dir + '/' + file;
+
+    let parsedData = undefined;
+    try {
+      parsedData = fm(fs.readFileSync(file).toString());
+    } catch (e) {
+      // failed reading file
+      return;
+    }
 
     const type = getNormalizedType(parsedData.attributes.type);
+    if(!type) return;
+
     let version = parsedData.attributes.pin || filesToVersionTags[file];
     if (file.endsWith('.draft.md')) {
       if (includeDrafts) {
@@ -231,8 +242,8 @@ const run = () => {
     // create changelog
     const versionTagsToCommitHashes = getVersionTagsToCommitHashes();
     const commitHashesToVersionTags =  getCommitHashesToVersionTags(versionTagsToCommitHashes);
-    const filesToVersionTags = getFilesToVersionTags(changelogDir, commitHashesToVersionTags);
-    const changelogData = getChangelogData(filesToVersionTags, program.includeDrafts, program.includeUpcoming);
+    const filesToVersionTags = getFilesToVersionTags(process.cwd(), commitHashesToVersionTags);
+    const changelogData = getChangelogData(filesToVersionTags, program.includeDrafts, program.includeUpcoming, process.cwd());
 
     let changelog = '';
     Object.keys(changelogData).filter(version => version !== 'undefined').sort((a, b) => {
