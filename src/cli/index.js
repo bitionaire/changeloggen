@@ -38,6 +38,10 @@ const verifyChangelogDirectory = (directory) => {
   }
 };
 
+const getGitRootDirectory = () => {
+  return spawnSync( 'git', [ 'rev-parse', '--show-toplevel' ] ).stdout.toString().trim();
+};
+
 const getChronologicalCommitHashes = () => {
   return spawnSync( 'git', [ '--no-pager', 'log', '--reverse', '--pretty=format:%H' ] ).stdout.toString().trim().split('\n');
 };
@@ -239,11 +243,13 @@ const run = () => {
     const changelogDir = path.resolve(process.cwd(), 'changelog');
     verifyChangelogDirectory(changelogDir);
 
+    const gitRootDir = getGitRootDirectory();
+
     // create changelog
     const versionTagsToCommitHashes = getVersionTagsToCommitHashes();
     const commitHashesToVersionTags =  getCommitHashesToVersionTags(versionTagsToCommitHashes);
     const filesToVersionTags = getFilesToVersionTags(process.cwd(), commitHashesToVersionTags);
-    const changelogData = getChangelogData(filesToVersionTags, program.includeDrafts, program.includeUpcoming, process.cwd());
+    const changelogData = getChangelogData(filesToVersionTags, program.includeDrafts, program.includeUpcoming, gitRootDir);
 
     let changelog = '';
     Object.keys(changelogData).filter(version => version !== 'undefined').sort((a, b) => {
