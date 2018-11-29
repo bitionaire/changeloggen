@@ -16,17 +16,17 @@ changelog will be generated.
 
 ### Is this the right thing for me?
 
-If you don't want manually write all changes in a single file and
-mess around with annoying merge conflicts or you also don't like
-to put your changes in commit messages, then this might be the tool
+If you don't want to manually write all changes in a single file and
+mess around with annoying merge conflicts or if you don't like
+to put all your changes in commit messages, then this might be the tool
 for you.
 
 ## Change descriptions
 
 A change file is a Markdown `.md` document. All change files should
-be placed somewhere inside of the `changelog` directory of the
-repository root. All subdirectories will be scanned, so changes can
-be organized e.g. by date directories.
+be placed somewhere inside of the `changelog` directory of the git
+repository toplevel-root. All subdirectories will be scanned, so changes
+can be organized e.g. by date directories.
 
 Changes that are not ready for release should have the file suffix
 `.draft.md` and will be skipped in the changelog generation process,
